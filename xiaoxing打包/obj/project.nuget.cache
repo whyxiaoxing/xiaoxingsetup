@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "oa9obkeOy+0=",
+  "success": true,
+  "projectFilePath": "D:\\C#\\xiaoxing打包\\xiaoxing打包.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\why\\.nuget\\packages\\communitytoolkit.mvvm\\8.4.0\\communitytoolkit.mvvm.8.4.0.nupkg.sha512",
+    "C:\\Users\\why\\.nuget\\packages\\microsoft.windows.sdk.net.ref\\10.0.17763.57\\microsoft.windows.sdk.net.ref.10.0.17763.57.nupkg.sha512"
+  ],
+  "logs": []
+}
