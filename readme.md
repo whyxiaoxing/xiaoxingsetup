@@ -1,34 +1,22 @@
-# xiaoxing打包APP
+# XIAOXING 安装程序 
 
-- 基于C#的WPF
-- 附带py脚本检测工具
-- 支持安装时候基本功能，
+## 文件介绍
 
-## 目录结构
+| 文件名 | 作用 |
+| --- | --- |
+| 打包文件.py | 主要程序负责安装 |
+| Uninstall.py | 卸载程序 |
+| data 目录 | 存放数据文件  |
 
-```xiaoxingsetup
-├── pic
-│   ├── 1.ico
-│   │   
-│   ├── 图片资源
-├── _7zexe.cs //7z解压
-├── 动画.xaml.cs //解压时候动画以及解压过程
-├── 基础数据.cs //程序数据位置
-├── 自定义安装.cs //自定义安装界面
-```
+---
+data 目录下方解压的7z文件
+dotnet 是安装前检查的必要运行时文件
 
-## 数据部分
-
-> > 基础数据.cs 内部包含了80%以上的数据位置，需要可以自定义修改变量
-> > 可以自定义背景图片，以及icon
-> > 可以往 ``` public partial class MVVM数据库 : ObservableObject ``` 内添加数据，绑定至xaml部分
-
-## 后续
-
-> > 该程序仅维护两个版本
-> > 下一个版本主要目标是加入updata功能，以及优化安装流程
-
-## 开发人员
-
->>> whyxiaoxing
->>>
+--- 
+- 使用办法
+1. 先运行使用pip 命令安装必要的包
+> `pip3 install -r Packaeg.txt `
+2. 先更改`打包文件.py` 内的两个类的`init` 的数据
+3. 先使用pyinstaller 编译uninstall.py
+4. 运行打包指令
+   

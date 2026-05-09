@@ -1,0 +1,2 @@
+pyshortcuts == 1.9.7
+pyinstaller == 6.20.0
