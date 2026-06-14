@@ -12,18 +12,16 @@ from tkinter import Toplevel, scrolledtext, PhotoImage, filedialog, messagebox, 
 from typing import Optional
 from PIL import Image, ImageTk
 import json
+from win32com.client import Dispatch
 
 class AppPath:
     @staticmethod
     def root_dir() -> Path:
-        if getattr(sys, "frozen", False):
-            return Path(__file__).resolve().parent
-
-        return Path(__file__).resolve().parent
+        return Path(sys._MEIPASS).resolve()
 
     @staticmethod
     def data_path(relative_path: str) -> Path:
-        return AppPath.root_dir() / relative_path
+        return (AppPath.root_dir() / relative_path).resolve()
 
 _TKROOTnouser=tkinter.Tk()
 class 函数:
@@ -165,7 +163,7 @@ class 函数:
                 self._设置变量(self.解压日志, f"[{文件名}][{输出类型}] {日志行}")
 
     def 加载图片(self,路径:str)->PhotoImage:
-        完整路径 = str((Path(__file__).resolve().parent / 路径).resolve())
+        完整路径 = str((AppPath.root_dir() / 路径).resolve())
         ico=Image.open(完整路径)
         ico=ico.resize((32,32),Image.Resampling.LANCZOS)
         图片对象 = ImageTk.PhotoImage(ico, master=getattr(self, "TKRoot", None))
@@ -220,6 +218,15 @@ class 函数:
             terminal=False,
             icon=完整路径
         )
+        shell = Dispatch("WScript.Shell")
+
+        桌面路径 = Path(shell.SpecialFolders("Desktop"))
+
+        快捷方式路径 = 桌面路径 / f"{Path(程序名称).stem}.lnk"
+
+        shortcut = shell.CreateShortcut(str(快捷方式路径))
+        shortcut.WorkingDirectory = str(Path(安装目录).resolve())
+        shortcut.Save()
         self._设置变量(self.解压日志,"已经创建快捷方式")
 
     def 记录安装位置(self,安装目录):
@@ -233,48 +240,70 @@ class 函数:
             json.dump(数据, 文件, ensure_ascii=False, indent=4)
         self._设置变量(self.解压日志,"已经创建卸载卸载内容")
 
-    def 安装前检查(self,tk:tkinter.Tk) -> bool:
+    def 安装前检查(self, tk: tkinter.Tk) -> bool:
         try:
-            检测结果 = subprocess.run(
-                ["dotnet", "--list-runtimes"],
-                capture_output=True,
-                text=True,
-                shell=False,
-                check=False,
-                creationflags=subprocess.CREATE_NO_WINDOW
-            )
-            if 检测结果.returncode == 0:
-                if "Microsoft.WindowsDesktop.App 9." in 检测结果.stdout or "Microsoft.NETCore.App 9" in 检测结果.stdout:
-                    return True
-                else:
-                    raise
-        except:
-            结果 = tkinter.messagebox.askokcancel("无法检测到dotnet9环境","您没有安装 dotnet9 Desktop Runtime，是否安装 dotnet9？")
-            if not 结果: return False
+            基础环境目录 = Path(AppPath.data_path(r"data/基础环境"))
 
-            安装程序路径 = AppPath.data_path(r"data/dotnet/dotnet9.exe")
-
-            try:
-                安装进程 = subprocess.Popen([str(安装程序路径)],shell=False)
-
-                while True:
-                    try:
-                        返回码 = 安装进程.wait(timeout=0.1)
-                        break
-                    except subprocess.TimeoutExpired:
-                        tk.update()
-
-                if 返回码 != 0:
-                    raise RuntimeError(str(返回码))
-
-            except Exception as e:
+            if not 基础环境目录.exists():
                 tkinter.messagebox.showerror(
-                    "安装失败",
-                    f"dotnet9 安装程序启动失败:\n{e}"
+                    "基础环境缺失",
+                    f"基础环境目录不存在:\n{基础环境目录}"
                 )
                 return False
 
-        return True
+            安装程序列表 = sorted(
+                基础环境目录.rglob("*.exe"),
+                key=lambda 路径: str(路径).lower()
+            )
+
+            if len(安装程序列表) == 0:
+                tkinter.messagebox.showerror(
+                    "基础环境缺失",
+                    f"基础环境目录中没有找到任何 exe 安装程序:\n{基础环境目录}"
+                )
+                return False
+
+            for 安装程序路径 in 安装程序列表:
+                try:
+                    安装进程 = subprocess.Popen(
+                        [str(安装程序路径)],
+                        shell=False,
+                        cwd=str(安装程序路径.parent),
+                        creationflags=subprocess.CREATE_NO_WINDOW
+                    )
+
+                    while True:
+                        try:
+                            返回码 = 安装进程.wait(timeout=0.1)
+                            break
+                        except subprocess.TimeoutExpired:
+                            tk.update_idletasks()
+                            tk.update()
+
+                    # 0：正常成功
+                    # 3010：安装成功，但需要重启，很多微软运行库会返回这个
+                    if 返回码 not in (0, 3010,1602):
+                        raise RuntimeError(
+                            f"安装程序返回异常代码: {返回码}\n安装程序: {安装程序路径}"
+                        )
+
+                except Exception as e:
+                    tkinter.messagebox.showerror(
+                        "安装失败",
+                        f"基础环境安装失败:\n\n"
+                        f"安装程序:\n{安装程序路径}\n\n"
+                        f"错误信息:\n{e}"
+                    )
+                    return False
+
+            return True
+
+        except Exception as e:
+            tkinter.messagebox.showerror(
+                "基础环境安装失败",
+                f"执行基础环境安装时发生异常:\n{e}"
+            )
+            return False
 
 
 
@@ -285,12 +314,12 @@ class TK设置(函数):
         self.TKRoot = _TKROOTnouser
         self.窗口大小: Optional[str]="400x100"
         self.窗口名称: Optional[str]="xiaoxing安装程序"
-        self.安装程序名称: Optional[str]="xiaoxing.exe"
+        self.安装程序名称: Optional[str]="XIAOXING.exe"
         self.图片: Optional[ImageTk.PhotoImage]=None
         self.__协议位置:str=str(AppPath.data_path(r"./data/安装协议/安装协议.txt"))
 
-        self.__默认安装路径:StringVar=tkinter.StringVar(value=r"D:/xiaoxing")
-        self.__安装路径是否可以有中文:bool=False
+        self.__默认安装路径:StringVar=tkinter.StringVar(value=r"D:\xiaoxing")
+        self.__安装路径是否可以有中文:bool=True
 
 
         self.__是否同意协议 = tkinter.BooleanVar(value=True)

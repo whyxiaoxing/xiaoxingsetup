@@ -1,5 +1,6 @@
 import asyncio
 import json
+import sys
 from pathlib import Path
 import threading
 import tkinter
@@ -55,7 +56,10 @@ async def 删除安装内容(安装路径: Path) -> list[str]:
 
 
 def main() -> None:
-    当前目录 = Path(__file__).resolve().parent
+    if getattr(sys, "frozen", False):
+        当前目录 = Path(sys.executable).resolve().parent
+    else:
+        当前目录 = Path(__file__).resolve().parent
 
     with open(当前目录 / "Uninstall.json", "r", encoding="utf-8") as 文件:
         安装路径 = Path(json.load(文件)["InstallPath"])

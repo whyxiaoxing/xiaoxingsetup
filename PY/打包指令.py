@@ -3,16 +3,16 @@ import subprocess
 
 使用conda = False
 
-项目目录 = r"D:\pycode\study"
+项目目录 = r"E:\打包文件\SetUpproject"
 
-venv激活脚本 = r"D:\pycode\study\.venv\Scripts\activate.bat"
+venv激活脚本 = r"E:\打包文件\SetUpproject\.venv\Scripts\activate.ps1"
 
 conda激活脚本 = r"D:\Anaconda3\Scripts\activate.bat"
 conda环境名 = "YOLO"
 
 pyinstaller命令 = (
     r'pyinstaller --noconsole -F --clean '
-    r'--icon "D:\pycode\study\1.ico" '
+    r'--icon "E:\打包文件\SetUpproject\1.ico" '
     r'--add-data "data;data" '
     r'--runtime-tmpdir ./ '
     r'"打包文件.py"'
@@ -29,3 +29,5 @@ subprocess.run(
     shell=True,
     check=True
 )
+
+# uninstall.py 打包命令 pyinstaller --onedir --clean --icon E:\打包文件\SetUpproject\1.ico Uninstall.py
